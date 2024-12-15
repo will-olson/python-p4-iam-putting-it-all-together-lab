@@ -15,16 +15,13 @@ with app.app_context():
     Recipe.query.delete()
     User.query.delete()
 
-    fake = Faker()
-
     print("Creating users...")
 
-    # make sure users have unique usernames
     users = []
     usernames = []
 
     for i in range(20):
-        
+
         username = fake.first_name()
         while username in usernames:
             username = fake.first_name()
@@ -36,7 +33,8 @@ with app.app_context():
             image_url=fake.url(),
         )
 
-        user.password_hash = user.username + 'password'
+        # Use the password property to ensure hashing
+        user.password = user.username + 'password'
 
         users.append(user)
 
@@ -46,18 +44,17 @@ with app.app_context():
     recipes = []
     for i in range(100):
         instructions = fake.paragraph(nb_sentences=8)
-        
+
         recipe = Recipe(
             title=fake.sentence(),
             instructions=instructions,
-            minutes_to_complete=randint(15,90),
+            minutes_to_complete=randint(15, 90),
+            user=rc(users)  # Ensure the recipe has a user
         )
-
-        recipe.user = rc(users)
 
         recipes.append(recipe)
 
     db.session.add_all(recipes)
-    
+
     db.session.commit()
     print("Complete.")
