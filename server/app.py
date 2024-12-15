@@ -105,6 +105,9 @@ def handle_recipes():
         if not all(key in data for key in ['title', 'instructions', 'minutes_to_complete']):
             return jsonify({"error": "Missing required fields."}), 422
 
+        if len(data['instructions']) < 50:
+            return jsonify({"error": "Instructions must be at least 50 characters long."}), 422
+
         try:
             new_recipe = Recipe(
                 title=data['title'],

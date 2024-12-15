@@ -20,7 +20,8 @@ class User(db.Model):
 
     @password_hash.setter
     def password_hash(self, password):
-        self._password_hash = generate_password_hash(password)
+        if password:
+            self._password_hash = generate_password_hash(password)
 
     def verify_password(self, password):
         return check_password_hash(self._password_hash, password)
