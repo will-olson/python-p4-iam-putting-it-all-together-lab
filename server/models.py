@@ -25,6 +25,9 @@ class User(db.Model):
     def verify_password(self, password):
         return check_password_hash(self._password_hash, password)
 
+    def authenticate(self, password):
+        return self.verify_password(password)
+
     @validates('username')
     def validate_username(self, key, username):
         if not username:
@@ -38,7 +41,7 @@ class Recipe(db.Model):
     title = db.Column(db.String(120), nullable=False)
     instructions = db.Column(db.Text, nullable=False)
     minutes_to_complete = db.Column(db.Integer, nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
     @validates('instructions')
     def validate_instructions(self, key, instructions):
