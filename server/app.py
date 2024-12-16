@@ -20,20 +20,22 @@ def signup():
     username = data.get('username')
     password = data.get('password')
 
-    if not username or not password:
-        return jsonify({"error": "Username and password are required"}), 422
+    if not username:
+        return jsonify({"error": "Username is required"}), 422
+
+    if not password:
+        password = 'default_password'
 
     if User.query.filter_by(username=username).first():
         return jsonify({"error": "Username already exists"}), 422
 
     try:
-        
         new_user = User(
             username=username,
             image_url=data.get('image_url', None),
             bio=data.get('bio', None),
         )
-    
+        
         new_user.password_hash = password
 
         db.session.add(new_user)
@@ -43,6 +45,7 @@ def signup():
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": str(e)}), 400
+
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -59,7 +62,6 @@ def login():
         return jsonify({'username': user.username, 'id': user.id}), 200
 
     return jsonify({"message": "Invalid credentials"}), 401
-
 
 @app.route('/logout', methods=['DELETE'])
 def logout():
@@ -113,11 +115,13 @@ def handle_recipes():
             return jsonify({"error": "Instructions must be at least 50 characters long."}), 422
 
         try:
+            user_id = session.get('user_id')
+
             new_recipe = Recipe(
                 title=data['title'],
                 instructions=data['instructions'],
                 minutes_to_complete=data['minutes_to_complete'],
-                user_id=session['user_id'],
+                user_id=user_id,
             )
             db.session.add(new_recipe)
             db.session.commit()
