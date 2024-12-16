@@ -1,7 +1,6 @@
 from flask import Flask, jsonify, request, session
 from flask_migrate import Migrate
 from models import db, User, Recipe
-from werkzeug.security import check_password_hash
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
@@ -28,14 +27,18 @@ def signup():
         return jsonify({"error": "Username already exists"}), 422
 
     try:
+        
         new_user = User(
             username=username,
             image_url=data.get('image_url', None),
             bio=data.get('bio', None),
         )
+    
         new_user.password_hash = password
+
         db.session.add(new_user)
         db.session.commit()
+
         return jsonify({"message": "User created successfully."}), 201
     except Exception as e:
         db.session.rollback()
@@ -43,19 +46,20 @@ def signup():
 
 @app.route('/login', methods=['POST'])
 def login():
-    username = request.json.get('username')
-    password = request.json.get('password')
-
-    if not username or not password:
+    data = request.get_json()
+    if not data or 'username' not in data or 'password' not in data:
         return jsonify({"error": "Username and password are required"}), 422
 
-    user = User.query.filter_by(username=username).first()
+    username = data['username']
+    password = data['password']
 
+    user = User.query.filter_by(username=username).first()
     if user and user.authenticate(password):
         session['user_id'] = user.id
         return jsonify({'username': user.username, 'id': user.id}), 200
 
     return jsonify({"message": "Invalid credentials"}), 401
+
 
 @app.route('/logout', methods=['DELETE'])
 def logout():
